@@ -10,8 +10,7 @@ trap('SIGINT')  do
 end
 
 at_exit do
-  TicTacToe::IO.write_ln
-  TicTacToe::IO.write_ln(I18n.t('goodbye'))
+  TicTacToe::IO.write_ln("\n#{I18n.t('goodbye')}")
 end
 
 TicTacToe::Game.start
