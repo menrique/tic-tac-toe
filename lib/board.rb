@@ -5,31 +5,35 @@ module TicTacToe
     def initialize
       self.rows = %w(1 2 3)
       self.columns = %w(a b c)
-      build_cells
+      init_cells
     end
 
     def set(row, col, mark)
-      if (validity = valid?(row, col))
+      if (result = valid_coords?(row, col))
         self.cells[row][col] = mark
       end
-      validity
+      result
     end
 
     def at(row, col)
       cells[row][col]
     end
 
-    def clean
-      build_cells
+    def valid_coords?(row, col)
+      rows.include?(row) && columns.include?(col) && at(row, col).nil?
     end
 
-    def valid?(row, col)
-      rows.include?(row) && columns.include?(col) && at(row, col).nil?
+    def available_cell?
+      rows.any?{|row| columns.any?{|col| cells[row][col].nil?}}
+    end
+
+    def reset
+      init_cells
     end
 
     private
 
-    def build_cells
+    def init_cells
       self.cells = rows.inject({}){|result, row| result[row] = Hash[columns.map{|col| [col, nil]}]; result}
     end
   end

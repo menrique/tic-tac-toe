@@ -16,50 +16,53 @@ module TicTacToe
       start
     end
 
-    def set_players
-      IO.write_ln(I18n.t('enter_players'))
+    def start
+      loop do
+        self.board = Board.new
+        self.current_player = players.first
+        play
+        break unless restart?
+      end
+      IO.write_ln(I18n.t('goodbye'))
+    end
 
-      player1_name = I18n.t('player1')
-      player2_name = I18n.t('player2')
+    def set_players
+      IO.write_ln(I18n.t('players.setting'))
+
+      player1_name = I18n.t('players.p1')
+      player2_name = I18n.t('players.p2')
 
       self.players = [
           player1 = Player.new(IO.read_ln(player1_name) || player1_name, 'X'),
           player2 = Player.new(IO.read_ln_br(player2_name) || player2_name, '0')
       ]
-      self.current_player = players.first
 
-      IO.write_ln_br(I18n.t('announce_players', player1: player1.name, player2: player2.name))
-    end
-
-    def start
-      self.board = Board.new
-      play
+      IO.write_ln_br(I18n.t('players.description', player1: player1.name, player2: player2.name))
     end
 
     def play
-      until any_winner? do
+      until any_winner? || tied_game? do
         row, col = get_coords
 
         if board.set(row, col, current_player.mark)
           next_player
         else
-          IO.write_ln_br(I18n.t('invalid_play'))
+          IO.write_ln_br(I18n.t('errors.invalid_input'))
         end
       end
     end
 
     def get_coords
-      match = get_cmd(/(?<row>[123])(?<col>[abc])/)
+      match = get_cmd(current_player.name, /(?<row>[123])?(?<col>[abc])?/)
       [match[:row], match[:col]]
     end
 
-    def get_cmd(exp)
+    def get_cmd(label, exp)
       match = nil
-      repeat = true
 
-      while repeat do
-        match = exp.match(IO.read_ln_br(current_player.name))
-        IO.write_ln_br(I18n.t('invalid_play')) if (repeat = match.nil?)
+      while match.nil? do
+        match = exp.match(IO.read_ln_br(label))
+        IO.write_ln_br(I18n.t('errors.invalid_input')) if match.nil?
       end
 
       match
@@ -71,7 +74,21 @@ module TicTacToe
     end
 
     def any_winner?
-      false
+      if (result = 0 > 1)
+        IO.write_ln_br(I18n.t('results.winner'))
+      end
+      result
+    end
+
+    def tied_game?
+      if (result = !board.available_cell?)
+        IO.write_ln_br(I18n.t('results.tied'))
+      end
+      result
+    end
+
+    def restart?
+      get_cmd(I18n.t('options.restart'), /^[yn]\z/)[0] == 'y'
     end
 
     def self.start
