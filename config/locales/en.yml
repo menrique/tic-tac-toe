@@ -35,5 +35,9 @@ en:
     tied: 'No winners this time.'
     winner: '%{player} is the winner!'
 
-  goodbye: 'Thanks for using Tic-Tac-Toe. Goodbye!'
+  goodbye: |
+    ===========================================
+    | Thanks for using to Tic-Tac-Toe         |
+    | Goodbye!                                |
+    ===========================================
 
