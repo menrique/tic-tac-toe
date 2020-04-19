@@ -17,11 +17,23 @@ en:
     4. The first player to get three consecutive marks in a row, column or diagonally is the winner.
     5. When all squares are full, the game is over. If no player is the winner, the game ends in a tie.
 
-  enter_players: 'Enter player names'
-  player1: 'Player 1'
-  player2: 'Player 2'
-  announce_players: |
-    %{player1} will mark with X
-    %{player2} will mark with 0
+  players:
+    settings: 'Enter player names'
+    p1: 'Player 1'
+    p2: 'Player 2'
+    description: |
+      %{player1} will mark with X
+      %{player2} will mark with 0
 
-  invalid_play: 'Invalid play. Try again.'
+  errors:
+    invalid_input: 'Invalid input. Try again.'
+
+  options:
+    restart: 'Do you want to play again? (y/n)'
+
+  results:
+    tied: 'No winners this time.'
+    winner: '%{player} is the winner!'
+
+  goodbye: 'Thanks for using Tic-Tac-Toe. Goodbye!'
+
