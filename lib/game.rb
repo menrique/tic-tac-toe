@@ -7,27 +7,26 @@ require './lib/player'
 
 module TicTacToe
   class Game
-    attr_accessor :board, :players, :current_player
+    attr_accessor :board, :players, :current_player, :winner_player
 
     def initialize
       IO.write_ln_br(I18n.t('welcome'))
       IO.write_ln_br(I18n.t('rules', board: IO.draw(Board.new, coords: true)))
-      set_players
-      start
     end
 
     def start
+      set_players
       loop do
         self.board = Board.new
+        self.winner_player = nil
         self.current_player = players.first
         play
         break unless restart?
       end
-      IO.write_ln(I18n.t('goodbye'))
     end
 
     def set_players
-      IO.write_ln(I18n.t('players.setting'))
+      IO.write_ln(I18n.t('players.settings'))
 
       player1_name = I18n.t('players.p1')
       player2_name = I18n.t('players.p2')
@@ -43,13 +42,27 @@ module TicTacToe
     def play
       until any_winner? || tied_game? do
         row, col = get_coords
-
         if board.set(row, col, current_player.mark)
-          next_player
+          next_player unless winning_play?(row, col)
+          IO.write_ln_br(IO.draw(board))
         else
           IO.write_ln_br(I18n.t('errors.invalid_input'))
         end
       end
+    end
+
+    def any_winner?
+      if (result = !self.winner_player.nil?)
+        IO.write_ln_br(I18n.t('results.winner', player: current_player.name))
+      end
+      result
+    end
+
+    def tied_game?
+      if (result = !board.available_cell?)
+        IO.write_ln_br(I18n.t('results.tied'))
+      end
+      result
     end
 
     def get_coords
@@ -68,23 +81,14 @@ module TicTacToe
       match
     end
 
+    def winning_play?(row, col)
+      if board.matching_row_at?(row, col) || board.matching_column_at?(row, col) || board.matching_diagonal_at?(row, col)
+        self.winner_player = current_player
+      end
+    end
+
     def next_player
-      IO.write_ln_br(IO.draw(board))
       self.current_player = (current_player == players[0] ? players[1] : players[0])
-    end
-
-    def any_winner?
-      if (result = 0 > 1)
-        IO.write_ln_br(I18n.t('results.winner'))
-      end
-      result
-    end
-
-    def tied_game?
-      if (result = !board.available_cell?)
-        IO.write_ln_br(I18n.t('results.tied'))
-      end
-      result
     end
 
     def restart?
@@ -92,8 +96,7 @@ module TicTacToe
     end
 
     def self.start
-      I18n.load_path << Dir[File.expand_path("./config/locales") + "/*.yml"]
-      new
+      new.start
     end
   end
 end

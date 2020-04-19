@@ -27,6 +27,36 @@ module TicTacToe
       rows.any?{|row| columns.any?{|col| cells[row][col].nil?}}
     end
 
+    def matching_row_at?(row, col)
+      value = cells[row][col]
+      cells[row].all?{|_, v| v == value}
+    end
+
+    def matching_column_at?(row, col)
+      value = cells[row][col]
+      cells.all?{|_, v| v[col] == value}
+    end
+
+    def matching_diagonal_at?(row, col)
+      value = cells[row][col]
+      center = cells['2']['b']
+
+      if row == '1' && col == 'a'
+        value == center && center == cells['3']['c']
+      elsif row == '1' && col == 'c'
+        value == center && center == cells['3']['a']
+      elsif row == '3' && col == 'a'
+        value == center && center == cells['1']['c']
+      elsif row == '3' && col == 'c'
+        value == center && center == cells['1']['a']
+      elsif row == '2' && col == 'b'
+        (center == cells['1']['a'] && center == cells['3']['c']) ||
+        (center == cells['3']['a'] && center == cells['1']['c'])
+      else
+        false
+      end
+    end
+
     def reset
       init_cells
     end
