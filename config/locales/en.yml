@@ -17,6 +17,16 @@ en:
     4. The first player to get three consecutive marks in a row, column or diagonally is the winner.
     5. When all squares are full, the game is over. If no player is the winner, the game ends in a tie.
 
+  commands: |
+    Commands
+    r  Restart the game (Keeping same players)
+    ?  Get some help on commands and available plays
+    q  Quit the game (Ctrl+C)
+
+  available_plays: |
+    Available plays
+    %{board}
+
   players:
     settings: 'Enter player names'
     p1: 'Player 1'
@@ -26,10 +36,14 @@ en:
       %{player2} will mark with 0
 
   errors:
-    invalid_input: 'Invalid input. Try again.'
+    invalid_name: '%{name} is taken. Please choose another name.'
+    invalid_input: 'Invalid input. Please try again.'
+
+  restarting: 'Restarting...'
+  quiting: 'Quiting...'
 
   options:
-    restart: 'Do you want to play again? (y/n)'
+    play_again: 'Do you want to play again? (y/n)'
 
   results:
     tied: 'No winners this time.'

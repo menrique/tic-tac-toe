@@ -1,3 +1,5 @@
+require 'i18n'
+
 module TicTacToe
   class Player
     attr_accessor :name, :mark

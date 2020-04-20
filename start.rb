@@ -1,17 +1,27 @@
 #!/usr/bin/env ruby
-require 'i18n'
-require './lib/io'
+
+require './config/initialize'
 require './lib/game'
 
-I18n.load_path << Dir[File.expand_path("./config/locales") + "/*.yml"]
+# Main routine
+module TicTacToe
 
-trap('SIGINT')  do
+  # Create the instance
+  game = Game.new
+
+  # Intersect exit signal and avoid interruption error
+  trap('SIGINT')  do
+    exit true
+  end
+
+  # Finish the game as exiting routine
+  at_exit do
+    game.finish
+  end
+
+  # Start the game
+  game.start
+
+  # Exit after the game ends normally
   exit true
 end
-
-at_exit do
-  TicTacToe::IO.write_ln("\n#{I18n.t('goodbye')}")
-end
-
-TicTacToe::Game.start
-exit true
