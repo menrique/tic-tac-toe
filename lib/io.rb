@@ -2,13 +2,14 @@ module TicTacToe
   module IO
 
     # Draw board displaying available coordinates optionally
-    def self.draw(board, coords: false)
-      empty = ->(row, col, coords){coords ? "#{row}#{col}" : ' '}
-      fill = ->(row, col, val, coords){val.nil? ? empty[row, col, coords] : val}
+    def self.draw(board, plays: false)
+      empty = ->(row, col, plays){plays ? "#{row}#{col}" : ' '}
+      occupied = ->(val, plays){plays ? "#{val} " : val}
+      fill = ->(row, col, val, plays){val.nil? ? empty[row, col, plays] : occupied[val, plays]}
 
-      board.cells.map{|row, cols| cols.map{|col, val| fill[row, col, val, coords]}}.each_with_index.map do |cells, index|
+      board.cells.map{|row, cols| cols.map{|col, val| fill[row, col, val, plays]}}.each_with_index.map do |cells, index|
         line = cells.join(' | ')
-        separator = "\n#{line.size.times.map{'-'}.join('')}\n" if index < 2
+        separator = index < 2 ? "\n#{line.size.times.map{'-'}.join('')}\n" : ''
         "#{line}#{separator}"
       end.join('')
     end

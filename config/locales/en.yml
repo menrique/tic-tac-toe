@@ -23,14 +23,19 @@ en:
     ?  Get some help on commands and available plays
     q  Quit the game (Ctrl+C)
 
-  available_plays: |
-    Available plays
+  plays: |
+    Plays
     %{board}
+
+  mode:
+    settings: 'Select the game mode'
+    select: 'Vs computer (1) or multi-player (2)'
 
   players:
     settings: 'Enter player names'
     p1: 'Player 1'
     p2: 'Player 2'
+    computer: 'Computer'
     description: |
       %{player1} will mark with X
       %{player2} will mark with 0
@@ -54,4 +59,3 @@ en:
     | Thanks for using to Tic-Tac-Toe         |
     | Goodbye!                                |
     ===========================================
-
