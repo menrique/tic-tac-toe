@@ -8,16 +8,17 @@ require './lib/player'
 # Game logic
 module TicTacToe
   class Game
-    attr_accessor :board, :players, :current_player, :winner_player
+    attr_accessor :board, :mode, :players, :current_player, :winner_player
 
     def initialize
       IO.write_ln_br(I18n.t('welcome'))
-      IO.write_ln_br(I18n.t('rules', board: IO.draw(Board.new, coords: true)))
+      IO.write_ln_br(I18n.t('rules', board: IO.draw(Board.new, plays: true)))
       IO.write_ln_br(I18n.t('commands'))
     end
 
     # Start a new game (entry point)
     def start
+      set_mode
       set_players
       loop do
         self.board = Board.new
@@ -26,13 +27,29 @@ module TicTacToe
 
         restart_cmd = false
         until any_winner? || tied_game? do
-          row, col, cmd = get_play_or_cmd
+          row, col, cmd = get_play_or_cmd.values
           cmd.nil? ? play(row, col) : process(cmd)
           break if (restart_cmd = restart?(cmd))
         end
 
         break unless restart_cmd || play_again?
       end
+    end
+
+    # Configure the game mode
+    def set_mode
+      IO.write_ln(I18n.t('mode.settings'))
+      self.mode = get_input(I18n.t('mode.select'), /^[12]\z/)[0]
+    end
+
+    # Check is the mode is against the computer
+    def vs_computer?
+      mode == '1'
+    end
+
+    # Check is the mode is multi-player
+    def multi_player?
+      mode == '2'
     end
 
     # Configure each player
@@ -46,7 +63,7 @@ module TicTacToe
       player2_name = ''
 
       loop do
-        player2_name = IO.read_ln_br(p2) || p2
+        player2_name = vs_computer? ? I18n.t('players.computer') : IO.read_ln_br(p2) || p2
         if player1_name != player2_name
           break
         else
@@ -56,9 +73,10 @@ module TicTacToe
 
       self.players = [
           player1 = Player.new(player1_name, 'X'),
-          player2 = Player.new(player2_name, '0')
+          player2 = Player.new(player2_name, '0', computer: vs_computer?)
       ]
 
+      IO.write_ln if vs_computer?
       IO.write_ln_br(I18n.t('players.description', player1: player1.name, player2: player2.name))
     end
 
@@ -102,8 +120,13 @@ module TicTacToe
 
     # Get play or command input
     def get_play_or_cmd
-      match = get_input(current_player.name, /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
-      [match[:row], match[:col], match[:cmd]]
+      if current_player.computer?
+        play = current_player.next_play(board)
+        {row: play[:row], col: play[:col], cmd: nil}
+      else
+        match = get_input(current_player.name, /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
+        {row: match[:row], col: match[:col], cmd: match[:cmd]}
+      end
     end
 
     # Process given command
@@ -111,7 +134,7 @@ module TicTacToe
       case cmd
       when '?'
         IO.write_ln_br(I18n.t('commands'))
-        IO.write_ln_br(I18n.t('available_plays', board: IO.draw(board, coords: true)))
+        IO.write_ln_br(I18n.t('plays', board: IO.draw(board, plays: true)))
       when 'r'
         IO.write_ln_br(I18n.t('restarting'))
       else # q

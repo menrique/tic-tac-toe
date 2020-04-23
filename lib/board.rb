@@ -1,6 +1,6 @@
 module TicTacToe
   class Board
-    attr_accessor :rows, :columns, :cells
+    attr_accessor :rows, :columns, :cells, :last_play
 
     def initialize
       self.rows = %w(1 2 3)
@@ -10,8 +10,9 @@ module TicTacToe
 
     # Cell setter marking given coordinates
     def set(row, col, mark)
-      if (result = valid_coords?(row, col))
+      if (result = valid_play?(row, col))
         self.cells[row][col] = mark
+        self.last_play = [row, col]
       end
       result
     end
@@ -22,7 +23,7 @@ module TicTacToe
     end
 
     # Check if given coordinates are in range and the cell is available
-    def valid_coords?(row, col)
+    def valid_play?(row, col)
       rows.include?(row) && columns.include?(col) && at(row, col).nil?
     end
 
@@ -58,7 +59,7 @@ module TicTacToe
         value == center && center == cells['1']['a']
       elsif row == '2' && col == 'b'
         (center == cells['1']['a'] && center == cells['3']['c']) ||
-        (center == cells['3']['a'] && center == cells['1']['c'])
+            (center == cells['3']['a'] && center == cells['1']['c'])
       else
         false
       end
