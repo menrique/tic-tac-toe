@@ -1,6 +1,6 @@
 module TicTacToe
   class Board
-    attr_accessor :rows, :columns, :cells, :last_play
+    attr_accessor :rows, :columns, :cells, :latest_play
 
     def initialize
       self.rows = %w(1 2 3)
@@ -9,10 +9,10 @@ module TicTacToe
     end
 
     # Cell setter marking given coordinates
-    def set(row, col, mark)
-      if (result = valid_play?(row, col))
+    def set(row, col, mark, validate: true, track: true)
+      if (result = !validate || valid_play?(row, col))
         self.cells[row][col] = mark
-        self.last_play = [row, col]
+        self.latest_play = [row, col] if track
       end
       result
     end
@@ -22,14 +22,19 @@ module TicTacToe
       cells[row][col]
     end
 
-    # Check if given coordinates are in range and the cell is available
-    def valid_play?(row, col)
-      rows.include?(row) && columns.include?(col) && at(row, col).nil?
+    # Check if given coordinates are available
+    def available_at?(row, col)
+      at(row, col).nil?
     end
 
-    # Check if there is any available cell
-    def available_cell?
-      rows.any?{|row| columns.any?{|col| cells[row][col].nil?}}
+    # Check if given coordinates are in range and the cell is available
+    def valid_play?(row, col)
+      rows.include?(row) && columns.include?(col) && available_at?(row, col)
+    end
+
+    # Check if there is any available play
+    def any_available_play?
+      rows.any?{|row| columns.any?{|col| available_at?(row, col)}}
     end
 
     # Check matching row relative to the given coordinates

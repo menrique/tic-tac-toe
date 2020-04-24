@@ -26,7 +26,7 @@ module TicTacToe
         self.current_player = players.first
 
         restart_cmd = false
-        until any_winner? || tied_game? do
+        until winner? || tie? do
           row, col, cmd = get_play_or_cmd.values
           cmd.nil? ? play(row, col) : process(cmd)
           break if (restart_cmd = restart?(cmd))
@@ -91,7 +91,7 @@ module TicTacToe
     end
 
     # Check if there is any declared winner
-    def any_winner?
+    def winner?
       if (result = !self.winner_player.nil?)
         IO.write_ln_br(I18n.t('results.winner', player: current_player.name))
       end
@@ -99,8 +99,8 @@ module TicTacToe
     end
 
     # Check if there is no more available play
-    def tied_game?
-      if (result = !board.available_cell?)
+    def tie?
+      if (result = !board.any_available_play?)
         IO.write_ln_br(I18n.t('results.tied'))
       end
       result
@@ -118,11 +118,17 @@ module TicTacToe
       match
     end
 
+    # Simulate input
+    def sim_input(label, input)
+      IO.write_ln_br("#{label}: #{input}")
+    end
+
     # Get play or command input
     def get_play_or_cmd
       if current_player.computer?
-        play = current_player.next_play(board)
-        {row: play[:row], col: play[:col], cmd: nil}
+        row, col = current_player.next_play(board)
+        sim_input(current_player.name, "#{row}#{col}")
+        {row: row, col: col, cmd: nil}
       else
         match = get_input(current_player.name, /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
         {row: match[:row], col: match[:col], cmd: match[:cmd]}
