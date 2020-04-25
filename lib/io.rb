@@ -16,12 +16,12 @@ module TicTacToe
 
     # Write given message
     def self.write(msg = nil)
-      print msg
+      print(msg)
     end
 
     # Write given message in a line
     def self.write_ln(msg = nil)
-      puts msg
+      puts(msg)
     end
 
     # Write given message in a line with an extra break
@@ -32,7 +32,7 @@ module TicTacToe
 
     # Read value from the line
     def self.read_ln(label)
-      write "#{label}: "
+      write("#{label}: ")
       input = STDIN.gets.chomp!
       input == "" ? nil : input
     end
