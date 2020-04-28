@@ -10,7 +10,7 @@ module TicTacToe
 
     # Cell setter marking given coordinates
     def set(row, col, mark, validate: true, track: true)
-      if (result = !validate || valid_play?(row, col))
+      if (result = in_range?(row, col) && (!validate || available_at?(row, col)) )
         self.cells[row][col] = mark
         self.latest_play = [row, col] if track
       end
@@ -19,17 +19,17 @@ module TicTacToe
 
     # Cell getter retrieving given coordinates mark
     def at(row, col)
-      cells[row][col]
+      in_range?(row, col) ? cells[row][col] : nil
     end
 
     # Check if given coordinates are available
     def available_at?(row, col)
-      at(row, col).nil?
+      in_range?(row, col) && cells[row][col].nil?
     end
 
-    # Check if given coordinates are in range and the cell is available
-    def valid_play?(row, col)
-      rows.include?(row) && columns.include?(col) && available_at?(row, col)
+    # Check if given coordinates are in range
+    def in_range?(row, col)
+      rows.include?(row) && columns.include?(col)
     end
 
     # Check if there is any available play
@@ -40,7 +40,7 @@ module TicTacToe
     # Check matching row relative to the given coordinates
     def matching_row_at?(row, col)
       value = cells[row][col]
-      cells[row].all?{|_, v| v == value}
+      cells[row].all?{|_, v| !v.nil? && v == value}
     end
 
     # Check matching column relative the to given coordinates
