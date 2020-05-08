@@ -39,21 +39,22 @@ module TicTacToe
 
     # Check matching row relative to the given coordinates
     def matching_row_at?(row, col)
+      return false unless in_range?(row, col) && !(value = cells[row][col]).nil?
       value = cells[row][col]
-      cells[row].all?{|_, v| !v.nil? && v == value}
+      cells[row].all?{|_, v| v == value}
     end
 
     # Check matching column relative the to given coordinates
     def matching_column_at?(row, col)
-      value = cells[row][col]
+      return false unless in_range?(row, col) && !(value = cells[row][col]).nil?
       cells.all?{|_, v| v[col] == value}
     end
 
     # Check matching diagonal relative the to given coordinates
     def matching_diagonal_at?(row, col)
-      value = cells[row][col]
-      center = cells['2']['b']
+      return false unless in_range?(row, col) && !(value = cells[row][col]).nil?
 
+      center = cells['2']['b']
       if row == '1' && col == 'a'
         value == center && center == cells['3']['c']
       elsif row == '1' && col == 'c'
