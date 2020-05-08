@@ -1,3 +1,4 @@
+require 'pry'
 require 'faker'
 require './lib/board'
 
@@ -202,15 +203,39 @@ describe TicTacToe::Board do
   describe '#matching_row_at?' do
 
     context 'when all columns on row 1 have the same mark' do
+      before do
+        board.set('1', 'a', 'X')
+        board.set('1', 'b', 'X')
+        board.set('1', 'c', 'X')
+      end
 
+      it 'should be true' do
+        expect(board.matching_row_at?('1', 'a')).to be_truthy
+      end
     end
 
     context 'when all columns on row 2 have the same mark' do
+      before do
+        board.set('2', 'a', 'X')
+        board.set('2', 'b', 'X')
+        board.set('2', 'c', 'X')
+      end
 
+      it 'should be true' do
+        expect(board.matching_row_at?('2', 'b')).to be_truthy
+      end
     end
 
     context 'when all columns on row 3 have the same mark' do
+      before do
+        board.set('3', 'a', 'X')
+        board.set('3', 'b', 'X')
+        board.set('3', 'c', 'X')
+      end
 
+      it 'should be true' do
+        expect(board.matching_row_at?('3', 'c')).to be_truthy
+      end
     end
 
     context 'when there no row with all columns with the same mark' do
@@ -218,6 +243,116 @@ describe TicTacToe::Board do
       it 'should return false' do
         expect(board.matching_row_at?(row, col)).to be_falsey
       end
+    end
+
+    context 'when the cell coordinates are out of range' do
+
+      it 'should return false' do
+        expect(board.matching_row_at?('4', 'd')).to be_falsey
+      end
+    end
+  end
+
+  describe '#matching_column_at?' do
+    context 'when all rows on columns "a" have the same mark' do
+      before do
+        board.set('1', 'a', 'X')
+        board.set('2', 'a', 'X')
+        board.set('3', 'a', 'X')
+      end
+
+      it 'should be true' do
+        expect(board.matching_column_at?('1', 'a')).to be_truthy
+      end
+    end
+
+    context 'when all rows on columns "b" have the same mark' do
+      before do
+        board.set('1', 'b', 'X')
+        board.set('2', 'b', 'X')
+        board.set('3', 'b', 'X')
+      end
+
+      it 'should be true' do
+        expect(board.matching_column_at?('2', 'b')).to be_truthy
+      end
+    end
+
+    context 'when all rows on columns "c" have the same mark' do
+      before do
+        board.set('1', 'c', 'X')
+        board.set('2', 'c', 'X')
+        board.set('3', 'c', 'X')
+      end
+
+      it 'should be true' do
+        expect(board.matching_column_at?('3', 'c')).to be_truthy
+      end
+    end
+
+    context 'when there no row with all columns with the same mark' do
+
+      it 'should return false' do
+        expect(board.matching_column_at?(row, col)).to be_falsey
+      end
+    end
+
+    context 'when the cell coordinates are out of range' do
+
+      it 'should return false' do
+        expect(board.matching_column_at?('4', 'd')).to be_falsey
+      end
+    end
+  end
+
+  describe '#matching_diagonal_at?' do
+    context 'when 1a to 3c diagonal cells have the same mark' do
+      before do
+        board.set('1', 'a', 'X')
+        board.set('2', 'b', 'X')
+        board.set('3', 'c', 'X')
+      end
+
+      it 'should be true' do
+        expect(board.matching_diagonal_at?('2', 'b')).to be_truthy
+      end
+    end
+
+    context 'when 1c to 3a diagonal cells have the same mark' do
+      before do
+        board.set('1', 'c', 'X')
+        board.set('2', 'b', 'X')
+        board.set('3', 'a', 'X')
+      end
+
+      it 'should be true' do
+        expect(board.matching_diagonal_at?('2', 'b')).to be_truthy
+      end
+    end
+
+    context 'when there no diagonal has the same mark' do
+
+      it 'should return false' do
+        expect(board.matching_diagonal_at?(row, col)).to be_falsey
+      end
+    end
+
+    context 'when the cell coordinates are out of range' do
+
+      it 'should return false' do
+        expect(board.matching_diagonal_at?('4', 'd')).to be_falsey
+      end
+    end
+  end
+
+  describe '#reset' do
+    before do
+      board.set('2', 'b', 'X')
+    end
+
+    it 'should initialize all cells with no value' do
+      board.reset
+      expect(board.cells.all?{|_, cols| cols.all?{|_, val| val.nil?}}).to be_truthy
     end
   end
 end
