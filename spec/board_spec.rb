@@ -11,8 +11,27 @@ describe TicTacToe::Board do
   let(:row) { board.rows.sample }
   let(:col) { board.columns.sample }
 
-  describe '#set' do
+  describe '#rows' do
+    it 'should store available rows' do
+      expect(board.rows).to eq %w(1 2 3)
+    end
+  end
 
+  describe '#columns' do
+    it 'should store available columns' do
+      expect(board.columns).to eq %w(a b c)
+    end
+  end
+
+  describe '#cells' do
+    it 'should combine rows and cells into a 3X3 matrix' do
+      expect(board.cells).to eq({'1' => {'a' => nil, 'b' => nil, 'c' => nil},
+                                 '2' => {'a' => nil, 'b' => nil, 'c' => nil},
+                                 '3' => {'a' => nil, 'b' => nil, 'c' => nil}})
+    end
+  end
+
+  describe '#set' do
     context 'when the cell is available' do
       it 'should return true' do
         expect(board.set(row, col, 'X', validate: true)).to be_truthy
@@ -44,7 +63,6 @@ describe TicTacToe::Board do
       end
 
       context 'when validation is true' do
-
         it 'should return false' do
           expect(board.set(row, col, 'O', validate: true)).to be_falsey
         end
@@ -56,7 +74,6 @@ describe TicTacToe::Board do
       end
 
       context 'when the validation is false' do
-
         it 'should return true' do
           expect(board.set(row, col, 'O', validate: false)).to be_truthy
         end
@@ -107,9 +124,7 @@ describe TicTacToe::Board do
   end
 
   describe '#at' do
-
     context 'when the cell coordinates are in range' do
-
       context 'when there is any cell value' do
         before do
           board.set(row, col, 'X')
@@ -121,7 +136,6 @@ describe TicTacToe::Board do
       end
 
       context 'when there is no cell value' do
-
         it 'should return the cell value' do
           expect(board.at(row, col)).to be_nil
         end
@@ -129,7 +143,6 @@ describe TicTacToe::Board do
     end
 
     context 'when the cell coordinates are out of range' do
-
       it 'should return nil' do
         expect(board.at('4', 'd')).to be_nil
       end
@@ -137,9 +150,7 @@ describe TicTacToe::Board do
   end
 
   describe '.available_at?' do
-
     context 'when there is no cell value' do
-
       it 'should return true' do
         expect(board.available_at?(row, col)).to be_truthy
       end
@@ -156,7 +167,6 @@ describe TicTacToe::Board do
     end
 
     context 'when the cell coordinates are out of range' do
-
       it 'should return false' do
         expect(board.available_at?('4', 'd')).to be_falsey
       end
@@ -164,16 +174,13 @@ describe TicTacToe::Board do
   end
 
   describe '#in_range?' do
-
     context 'when the cell coordinates are in range' do
-
       it 'should return true' do
         expect(board.in_range?(row, col)).to be_truthy
       end
     end
 
     context 'when the cell coordinates are out of range' do
-
       it 'should return false' do
         expect(board.in_range?('4', 'd')).to be_falsey
       end
@@ -181,9 +188,7 @@ describe TicTacToe::Board do
   end
 
   describe '#any_available_play?' do
-
     context 'when there is at least one available cell' do
-
       it 'should return true' do
         expect(board.any_available_play?).to be_truthy
       end
@@ -191,7 +196,7 @@ describe TicTacToe::Board do
 
     context 'when there are not available cell' do
       before do
-        rows.each{|row| columns.each{|col| board.set(row, col, %w{X O}.sample)}}
+        rows.each { |row| columns.each { |col| board.set(row, col, %w{X O}.sample) } }
       end
 
       it 'should return false' do
@@ -201,7 +206,6 @@ describe TicTacToe::Board do
   end
 
   describe '#matching_row_at?' do
-
     context 'when all columns on row 1 have the same mark' do
       before do
         board.set('1', 'a', 'X')
@@ -239,14 +243,12 @@ describe TicTacToe::Board do
     end
 
     context 'when there no row with all columns with the same mark' do
-
       it 'should return false' do
         expect(board.matching_row_at?(row, col)).to be_falsey
       end
     end
 
     context 'when the cell coordinates are out of range' do
-
       it 'should return false' do
         expect(board.matching_row_at?('4', 'd')).to be_falsey
       end
@@ -254,7 +256,7 @@ describe TicTacToe::Board do
   end
 
   describe '#matching_column_at?' do
-    context 'when all rows on columns "a" have the same mark' do
+    context "when all rows on columns 'a' have the same mark" do
       before do
         board.set('1', 'a', 'X')
         board.set('2', 'a', 'X')
@@ -266,7 +268,7 @@ describe TicTacToe::Board do
       end
     end
 
-    context 'when all rows on columns "b" have the same mark' do
+    context "when all rows on columns 'b' have the same mark" do
       before do
         board.set('1', 'b', 'X')
         board.set('2', 'b', 'X')
@@ -278,7 +280,7 @@ describe TicTacToe::Board do
       end
     end
 
-    context 'when all rows on columns "c" have the same mark' do
+    context "when all rows on columns 'c' have the same mark" do
       before do
         board.set('1', 'c', 'X')
         board.set('2', 'c', 'X')
@@ -291,14 +293,12 @@ describe TicTacToe::Board do
     end
 
     context 'when there no row with all columns with the same mark' do
-
       it 'should return false' do
         expect(board.matching_column_at?(row, col)).to be_falsey
       end
     end
 
     context 'when the cell coordinates are out of range' do
-
       it 'should return false' do
         expect(board.matching_column_at?('4', 'd')).to be_falsey
       end
@@ -331,14 +331,12 @@ describe TicTacToe::Board do
     end
 
     context 'when there no diagonal has the same mark' do
-
       it 'should return false' do
         expect(board.matching_diagonal_at?(row, col)).to be_falsey
       end
     end
 
     context 'when the cell coordinates are out of range' do
-
       it 'should return false' do
         expect(board.matching_diagonal_at?('4', 'd')).to be_falsey
       end
@@ -352,7 +350,7 @@ describe TicTacToe::Board do
 
     it 'should initialize all cells with no value' do
       board.reset
-      expect(board.cells.all?{|_, cols| cols.all?{|_, val| val.nil?}}).to be_truthy
+      expect(board.cells.all? { |_, cols| cols.all? { |_, val| val.nil? } }).to be_truthy
     end
   end
 end

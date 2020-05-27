@@ -21,10 +21,7 @@ module TicTacToe
       set_mode
       set_players
       loop do
-        self.board = Board.new
-        self.winner_player = nil
-        self.current_player = players.first
-
+        reset
         restart_cmd = false
         until winner? || tie? do
           row, col, cmd = get_play_or_cmd.values
@@ -34,6 +31,20 @@ module TicTacToe
 
         break unless restart_cmd || play_again?
       end
+    end
+
+    # Finish the game
+    def finish
+      IO.write_ln("\n#{I18n.t('goodbye')}")
+    end
+
+    private
+
+    # Reset game
+    def reset
+      self.board = Board.new
+      self.winner_player = nil
+      self.current_player = players.first
     end
 
     # Configure the game mode
@@ -73,7 +84,7 @@ module TicTacToe
 
       self.players = [
           player1 = Player.new(player1_name, 'X'),
-          player2 = Player.new(player2_name, '0', computer: vs_computer?)
+          player2 = Player.new(player2_name, '0', ai: vs_computer?)
       ]
 
       IO.write_ln if vs_computer?
@@ -125,7 +136,7 @@ module TicTacToe
 
     # Get play or command input
     def get_play_or_cmd
-      if current_player.computer?
+      if current_player.ai?
         row, col = current_player.next_play(board)
         sim_input(current_player.name, "#{row}#{col}")
         {row: row, col: col, cmd: nil}
@@ -176,11 +187,6 @@ module TicTacToe
     def quit
       IO.write_ln(I18n.t('quiting'))
       exit true
-    end
-
-    # Finish the game
-    def finish
-      IO.write_ln("\n#{I18n.t('goodbye')}")
     end
   end
 end

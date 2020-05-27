@@ -80,7 +80,10 @@ module TicTacToe
 
     # Build empty cells
     def init_cells
-      self.cells = rows.inject({}){|result, row| result[row] = Hash[columns.map{|col| [col, nil]}]; result}
+      self.cells = rows.inject({}) do |result, row|
+        result[row] = Hash[columns.map{|col| [col, nil]}]
+        result
+      end
     end
   end
 end

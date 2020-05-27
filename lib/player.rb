@@ -2,17 +2,17 @@ require 'pry'
 
 module TicTacToe
   class Player
-    attr_accessor :name, :mark, :computer
+    attr_accessor :name, :mark, :ai
 
-    def initialize(name, mark, computer: false)
+    def initialize(name, mark, ai: false)
       self.name = name
       self.mark = mark
-      self.computer = computer
+      self.ai = ai
     end
 
     # Check if the player behaves as the computer
-    def computer?
-      computer
+    def ai?
+      ai
     end
 
     # Get the next play based on different strategies
@@ -20,7 +20,7 @@ module TicTacToe
       row, col = nil, nil
 
       if board.any_available_play?
-        [:play_to_win, :block_winning_play, :take_corners, :take_center, :take_edges].any? do |strategy|
+        [:play_to_win, :block_opponent_winning_play, :take_corners, :take_center, :take_edges].any? do |strategy|
           row, col = send(strategy, board)
           !row.nil? && !col.nil?
         end
@@ -69,12 +69,12 @@ module TicTacToe
     end
 
     # Find a play blocking the opponent winning play
-    def block_winning_play(board)
-      latest_play = board.latest_play
-      latest_mark = board.at(*latest_play)
+    def block_opponent_winning_play(board)
       row, col = nil, nil
+      latest_play = board.latest_play
 
-      if board.latest_play
+      if latest_play
+        latest_mark = board.at(*latest_play)
         row, col = find_winning_play(board, latest_mark)
       end
 
@@ -83,7 +83,7 @@ module TicTacToe
 
     # Find a winning play
     def play_to_win(board)
-      [*find_winning_play(board, mark)]
+      find_winning_play(board, mark)
     end
 
     # Find any available corner
