@@ -10,14 +10,9 @@ module TicTacToe
   class Game
     attr_accessor :board, :mode, :players, :current_player, :winner_player
 
-    def initialize
-      IO.write_ln_br(I18n.t('welcome'))
-      IO.write_ln_br(I18n.t('rules', board: IO.draw(Board.new, plays: true)))
-      IO.write_ln_br(I18n.t('commands'))
-    end
-
     # Start a new game (entry point)
     def start
+      welcome
       set_mode
       set_players
       loop do
@@ -39,6 +34,13 @@ module TicTacToe
     end
 
     private
+
+    # Welcome
+    def welcome
+      IO.write_ln_br(I18n.t('welcome'))
+      IO.write_ln_br(I18n.t('rules', board: IO.draw(Board.new, plays: true)))
+      IO.write_ln_br(I18n.t('commands'))
+    end
 
     # Reset game
     def reset
@@ -161,14 +163,15 @@ module TicTacToe
 
     # Check if given play wins the game
     def winning_play?(row, col)
-      if board.matching_row_at?(row, col) || board.matching_column_at?(row, col) || board.matching_diagonal_at?(row, col)
+      if (result = board.matching_row_at?(row, col) || board.matching_column_at?(row, col) || board.matching_diagonal_at?(row, col))
         self.winner_player = current_player
       end
+      result
     end
 
     # Switch player turns
     def next_player
-      self.current_player = (current_player == players[0] ? players[1] : players[0])
+      self.current_player = (current_player == players.first ? players.last : players.first)
     end
 
     # Check if the command restart the game
