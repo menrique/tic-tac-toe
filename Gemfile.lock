@@ -31,6 +31,8 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.9.0)
     rspec-support (3.9.2)
+    wisper (2.0.0)
+    wisper-rspec (1.1.0)
 
 PLATFORMS
   ruby
@@ -40,6 +42,8 @@ DEPENDENCIES
   i18n!
   pry (~> 0.12.2)!
   rspec!
+  wisper (= 2.0.0)!
+  wisper-rspec!
 
 BUNDLED WITH
    2.1.4

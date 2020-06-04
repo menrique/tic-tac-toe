@@ -1,5 +1,4 @@
 require './lib/game'
-require './lib/game'
 
 describe TicTacToe::Game do
   let(:game) { described_class.new }
@@ -9,26 +8,22 @@ describe TicTacToe::Game do
   let(:players) { [player_class.new('Player1', 'X'), player_class.new('Player2', 'O')] }
 
   describe '#start' do
-    # ...
+
+    it 'should broadcast the game started, set the playing mode and the players to then play' do
+      expect{
+        expect(game).to receive(:set_mode).ordered
+        expect(game).to receive(:set_players).ordered
+        expect(game).to receive(:play).ordered
+        game.start
+      }.to broadcast(:game_started)
+    end
   end
 
   describe '#finish' do
-    before do
-      game
-    end
-
-    it 'should say goodbye' do
-      expect(io).to receive(:write_ln).with("\n#{I18n.t('goodbye')}")
-      game.finish
-    end
-  end
-
-  describe '-#welcome' do
-    it 'should output welcome, show rules and commands on create' do
-      expect(io).to receive(:write_ln_br).with(I18n.t('welcome')).ordered
-      expect(io).to receive(:write_ln_br).with(I18n.t('rules', board: io.draw(board_class.new, plays: true))).ordered
-      expect(io).to receive(:write_ln_br).with(I18n.t('commands')).ordered
-      game.send(:welcome)
+    it 'should broadcast the game finished' do
+      expect{
+        game.finish
+      }.to broadcast(:game_finished)
     end
   end
 
@@ -54,6 +49,56 @@ describe TicTacToe::Game do
 
     it 'should set the current player to the first' do
       expect(game.current_player).to eq players.first
+    end
+  end
+
+  describe '-#set_mode' do
+    let(:expression) { /^[12]\z/ }
+    before do
+      allow(game).to receive(:get_input).with(I18n.t('mode.select'), expression).and_return(mode)
+    end
+
+    context 'when the mode is "1"' do
+      let(:mode) { '1' }
+
+      it 'should set the game mode to "1"' do
+        game.send(:set_mode)
+        expect(game.mode).to eq mode
+      end
+
+      it 'should return the given mode' do
+        expect(game.send(:set_mode)).to eq mode
+      end
+    end
+
+    context 'when the mode is "2"' do
+      let(:mode) { '2' }
+
+      it 'should set the game mode to "2"' do
+        game.send(:set_mode)
+        expect(game.mode).to eq mode
+      end
+
+      it 'should return the given mode' do
+        expect(game.send(:set_mode)).to eq mode
+      end
+    end
+
+    context 'when the mode is unknown' do
+      let(:mode) { '1' }
+
+      before do
+        allow(io).to receive(:read_ln_br).with(I18n.t('mode.select')).and_return(nil, nil, mode)
+      end
+
+      it 'should retry until a valid mode input' do
+        game.send(:set_mode)
+        expect(game.mode).to eq mode
+      end
+
+      it 'should return a valid mode' do
+        expect(game.send(:set_mode)).to eq mode
+      end
     end
   end
 
@@ -105,7 +150,7 @@ describe TicTacToe::Game do
     # ...
   end
 
-  describe '-#play' do
+  describe '-#process_play' do
     # ...
   end
 
@@ -118,11 +163,6 @@ describe TicTacToe::Game do
 
       it 'should return true' do
         expect(game.send(:winner?)).to be_truthy
-      end
-
-      it 'should output the winner player name' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('results.winner', player: game.current_player.name))
-        game.send(:winner?)
       end
     end
 
@@ -147,11 +187,6 @@ describe TicTacToe::Game do
       it 'should return true' do
         expect(game.send(:tie?)).to be_truthy
       end
-
-      it 'should output the proper message' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('results.tied'))
-        game.send(:tie?)
-      end
     end
 
     context 'when there are available plays' do
@@ -165,25 +200,62 @@ describe TicTacToe::Game do
     end
   end
 
-  describe '-#get_input' do
-    # ...
+  describe '-#winner_or_tie_declared' do
+
+    context 'when there is a winner' do
+      before do
+        game.winner_player = players.first
+        allow(game).to receive(:winner?).and_return(true)
+      end
+
+      it 'should broadcast the winner' do
+        expect{
+          game.send(:winner_or_tie_declared)
+        }.to broadcast(:player_won, game.winner_player.name)
+      end
+
+      it 'should return true' do
+        expect(game.send(:winner_or_tie_declared)).to be_truthy
+      end
+    end
+
+    context 'when the game is a tie' do
+      before do
+        allow(game).to receive(:tie?).and_return(true)
+      end
+
+      it 'should broadcast the game is tied' do
+        expect{
+          game.send(:winner_or_tie_declared)
+        }.to broadcast(:game_tied)
+      end
+
+      it 'should return true' do
+        expect(game.send(:winner_or_tie_declared)).to be_truthy
+      end
+    end
+
+    context 'when there is no winner and the game continues' do
+      before do
+        allow(game).to receive(:winner?).and_return(false)
+        allow(game).to receive(:tie?).and_return(false)
+      end
+
+      it 'should return false' do
+        expect(game.send(:winner_or_tie_declared)).to be_falsey
+      end
+    end
   end
 
-  describe '-#sim_input' do
-    let(:label) { 'Player1' }
-    let(:input) { '1a' }
-
-    it 'should output a play simulating a player choice' do
-      expect(io).to receive(:write_ln_br).with("#{label}: #{input}")
-      game.send(:sim_input, label, input)
-    end
+  describe '-#get_input' do
+    # ...
   end
 
   describe '-#get_play_or_cmd' do
     # ...
   end
 
-  describe '-#process' do
+  describe '-#process_cmd' do
     context 'when the command is "?"'do
       let(:cmd) { '?' }
 
@@ -191,19 +263,20 @@ describe TicTacToe::Game do
         game.board = board_class.new
       end
 
-      it 'should output available commands and plays' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('commands')).ordered
-        expect(io).to receive(:write_ln_br).with(I18n.t('plays', board: io.draw(game.board, plays: true))).ordered
-        game.send(:process, cmd)
+      it 'should broadcast that help is required' do
+        expect{
+          game.send(:process_cmd, cmd)
+        }.to broadcast(:help_required, game.board)
       end
     end
 
     context 'when the command is "r"'do
       let(:cmd) { 'r' }
 
-      it 'should output a restarting message' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('restarting'))
-        game.send(:process, cmd)
+      it 'should broadcast the game is restarting' do
+        expect{
+          game.send(:process_cmd, cmd)
+        }.to broadcast(:game_restarting)
       end
     end
 
@@ -212,7 +285,7 @@ describe TicTacToe::Game do
 
       it 'should quit' do
         expect(game).to receive(:quit)
-        game.send(:process, cmd)
+        game.send(:process_cmd, cmd)
       end
     end
   end
@@ -312,9 +385,14 @@ describe TicTacToe::Game do
   end
 
   describe '-#quit' do
-    it 'should output the proper message and then quit' do
+    it 'should broadcast the game is exiting' do
       expect {
-        expect(io).to receive(:write_ln).with(I18n.t('quiting'))
+        game.send(:quit)
+      }.to broadcast(:game_exiting)
+    end
+
+    it 'should halt with system exit' do
+      expect {
         game.send(:quit)
       }.to raise_error SystemExit
     end

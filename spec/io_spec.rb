@@ -16,7 +16,7 @@ describe TicTacToe::IO do
 
     it 'should print the given message' do
       expect{
-        TicTacToe::IO.write(msg)
+        described_class.write(msg)
       }.to output(msg).to_stdout
     end
   end
@@ -25,7 +25,7 @@ describe TicTacToe::IO do
 
     it 'should puts the given message' do
       expect{
-        TicTacToe::IO.write_ln(msg)
+        described_class.write_ln(msg)
       }.to output("#{msg}\n").to_stdout
     end
   end
@@ -34,7 +34,7 @@ describe TicTacToe::IO do
 
     it 'should puts the given message and break into a new line' do
       expect{
-        TicTacToe::IO.write_ln_br(msg)
+        described_class.write_ln_br(msg)
       }.to output("#{msg}\n\n").to_stdout
     end
   end
@@ -43,7 +43,7 @@ describe TicTacToe::IO do
 
     it 'should write the given label as the output format' do
       expect{
-        TicTacToe::IO.read_ln(label)
+        described_class.read_ln(label)
       }.to output(label_output).to_stdout
     end
 
@@ -52,7 +52,7 @@ describe TicTacToe::IO do
       let(:input) { "#{chomped}\r" }
 
       it 'should gets and return the chomped input' do
-        expect(TicTacToe::IO.read_ln(label)).to eq chomped
+        expect(described_class.read_ln(label)).to eq chomped
       end
     end
 
@@ -62,7 +62,7 @@ describe TicTacToe::IO do
       end
 
       it 'should return nil' do
-        expect(TicTacToe::IO.read_ln(label)).to be_nil
+        expect(described_class.read_ln(label)).to be_nil
       end
     end
   end
@@ -70,9 +70,9 @@ describe TicTacToe::IO do
   describe '.read_ln_br' do
 
     it 'should read_ln the input and then break into a new line' do
-      expect(TicTacToe::IO).to receive(:read_ln).with(label).ordered
-      expect(TicTacToe::IO).to receive(:write_ln).ordered
-      TicTacToe::IO.read_ln_br(label)
+      expect(described_class).to receive(:read_ln).with(label).ordered
+      expect(described_class).to receive(:write_ln).ordered
+      described_class.read_ln_br(label)
     end
   end
 end
