@@ -45,7 +45,7 @@ en:
     invalid_input: 'Invalid input. Please try again.'
 
   restarting: 'Restarting...'
-  quiting: 'Quiting...'
+  exiting: 'Exiting...'
 
   options:
     play_again: 'Do you want to play again? (y/n)'

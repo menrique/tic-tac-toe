@@ -6,8 +6,9 @@ require './lib/game'
 # Main routine
 module TicTacToe
 
-  # Create the instance
+  # Create the game and its announcer
   game = Game.new
+  Announcer.new(game)
 
   # Intersect exit signal and avoid interruption error
   trap('SIGINT')  do

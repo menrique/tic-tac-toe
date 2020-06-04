@@ -1,46 +1,32 @@
 require 'i18n'
 require 'pry'
+require 'wisper'
 
 require './lib/io'
 require './lib/board'
 require './lib/player'
+require './lib/announcer'
 
 # Game logic
 module TicTacToe
   class Game
-    attr_accessor :board, :mode, :players, :current_player, :winner_player
+    include Wisper::Publisher
+    attr_accessor :board, :mode, :players, :current_player, :winner_player, :announcer
 
     # Start a new game (entry point)
     def start
-      welcome
+      broadcast(:game_started)
       set_mode
       set_players
-      loop do
-        reset
-        restart_cmd = false
-        until winner? || tie? do
-          row, col, cmd = get_play_or_cmd.values
-          cmd.nil? ? play(row, col) : process(cmd)
-          break if (restart_cmd = restart?(cmd))
-        end
-
-        break unless restart_cmd || play_again?
-      end
+      play
     end
 
     # Finish the game
     def finish
-      IO.write_ln("\n#{I18n.t('goodbye')}")
+      broadcast(:game_finished)
     end
 
     private
-
-    # Welcome
-    def welcome
-      IO.write_ln_br(I18n.t('welcome'))
-      IO.write_ln_br(I18n.t('rules', board: IO.draw(Board.new, plays: true)))
-      IO.write_ln_br(I18n.t('commands'))
-    end
 
     # Reset game
     def reset
@@ -80,7 +66,7 @@ module TicTacToe
         if player1_name != player2_name
           break
         else
-          IO.write_ln_br(I18n.t('errors.invalid_name', name: player2_name))
+          broadcast(:invalid_player_name, player2_name)
         end
       end
 
@@ -90,31 +76,50 @@ module TicTacToe
       ]
 
       IO.write_ln if vs_computer?
-      IO.write_ln_br(I18n.t('players.description', player1: player1.name, player2: player2.name))
+      broadcast(:players_set, player1.name, player2.name)
+    end
+
+    # Main game loop
+    def play
+      loop do
+        reset
+        restart_cmd = false
+        until winner_or_tie_declared do
+          row, col, cmd = get_play_or_cmd.values
+          cmd.nil? ? process_play(row, col) : process_cmd(cmd)
+          break if (restart_cmd = restart?(cmd))
+        end
+
+        break unless restart_cmd || play_again?
+      end
     end
 
     # Play by marking the current player on given coordinates
-    def play(row, col)
+    def process_play(row, col)
       if board.set(row, col, current_player.mark)
         next_player unless winning_play?(row, col)
-        IO.write_ln_br(IO.draw(board))
+        broadcast(:successful_play, board)
       else
-        IO.write_ln_br(I18n.t('errors.invalid_input'))
+        broadcast(:invalid_play)
       end
     end
 
     # Check if there is any declared winner
     def winner?
-      if (result = !self.winner_player.nil?)
-        IO.write_ln_br(I18n.t('results.winner', player: current_player.name))
-      end
-      result
+      !self.winner_player.nil?
     end
 
     # Check if there is no more available play
     def tie?
-      if (result = !board.any_available_play?)
-        IO.write_ln_br(I18n.t('results.tied'))
+      !board.any_available_play?
+    end
+
+    # Check and declare winner player or tied game
+    def winner_or_tie_declared
+      if (result = winner?)
+        broadcast(:player_won, winner_player.name)
+      elsif (result = tie?)
+        broadcast(:game_tied)
       end
       result
     end
@@ -131,16 +136,11 @@ module TicTacToe
       match
     end
 
-    # Simulate input
-    def sim_input(label, input)
-      IO.write_ln_br("#{label}: #{input}")
-    end
-
     # Get play or command input
     def get_play_or_cmd
       if current_player.ai?
         row, col = current_player.next_play(board)
-        sim_input(current_player.name, "#{row}#{col}")
+        broadcast(:player_played, current_player.name, "#{row}#{col}")
         {row: row, col: col, cmd: nil}
       else
         match = get_input(current_player.name, /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
@@ -149,13 +149,12 @@ module TicTacToe
     end
 
     # Process given command
-    def process(cmd)
+    def process_cmd(cmd)
       case cmd
       when '?'
-        IO.write_ln_br(I18n.t('commands'))
-        IO.write_ln_br(I18n.t('plays', board: IO.draw(board, plays: true)))
+        broadcast(:help_required, board)
       when 'r'
-        IO.write_ln_br(I18n.t('restarting'))
+        broadcast(:game_restarting)
       else # q
         quit
       end
@@ -182,13 +181,13 @@ module TicTacToe
     # Ask if the user wants to play again
     def play_again?
       continue = get_input(I18n.t('options.play_again'), /^[yn]\z/)[0] == 'y'
-      process('r') if continue
+      process_cmd('r') if continue
       continue
     end
 
     # Quit the game by exiting
     def quit
-      IO.write_ln(I18n.t('quiting'))
+      broadcast(:game_exiting)
       exit true
     end
   end
