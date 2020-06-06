@@ -1,7 +1,8 @@
 require './lib/game'
 
 describe TicTacToe::Game do
-  let(:game) { described_class.new }
+  let(:liaison) { TicTacToe::Liaison.new }
+  let(:game) { TicTacToe::Game.new(liaison) }
   let(:board_class) { TicTacToe::Board }
   let(:player_class) { TicTacToe::Player }
   let(:io) { TicTacToe::IO }
@@ -53,52 +54,15 @@ describe TicTacToe::Game do
   end
 
   describe '-#set_mode' do
-    let(:expression) { /^[12]\z/ }
+    let(:mode) { 1 }
+
     before do
-      allow(game).to receive(:get_input).with(I18n.t('mode.select'), expression).and_return(mode)
+      allow(liaison).to receive(:get_game_mode).and_return(mode)
     end
 
-    context 'when the mode is "1"' do
-      let(:mode) { '1' }
-
-      it 'should set the game mode to "1"' do
-        game.send(:set_mode)
-        expect(game.mode).to eq mode
-      end
-
-      it 'should return the given mode' do
-        expect(game.send(:set_mode)).to eq mode
-      end
-    end
-
-    context 'when the mode is "2"' do
-      let(:mode) { '2' }
-
-      it 'should set the game mode to "2"' do
-        game.send(:set_mode)
-        expect(game.mode).to eq mode
-      end
-
-      it 'should return the given mode' do
-        expect(game.send(:set_mode)).to eq mode
-      end
-    end
-
-    context 'when the mode is unknown' do
-      let(:mode) { '1' }
-
-      before do
-        allow(io).to receive(:read_ln_br).with(I18n.t('mode.select')).and_return(nil, nil, mode)
-      end
-
-      it 'should retry until a valid mode input' do
-        game.send(:set_mode)
-        expect(game.mode).to eq mode
-      end
-
-      it 'should return a valid mode' do
-        expect(game.send(:set_mode)).to eq mode
-      end
+    it 'should set the game mode with the one retrieved by the liaison' do
+      game.send(:set_mode)
+      expect(game.mode).to eq mode
     end
   end
 
@@ -147,7 +111,57 @@ describe TicTacToe::Game do
   end
 
   describe '-#set_players' do
-    # ...
+    let(:player_names) { [Faker::Name.name, Faker::Name.name] }
+
+    before do
+      allow(liaison).to receive(:get_player_names).and_return(player_names)
+    end
+
+    context 'when the game mode is vs the computer' do
+      before do
+        game.mode = '1'
+        game.send(:set_players)
+      end
+
+      it 'should set the player 1 as a human player with the name provided by the liaison and marking with "X"' do
+        player1 = game.players.first
+        expect(player1).to be_a player_class
+        expect(player1.name).to eq player_names.first
+        expect(player1.mark).to eq 'X'
+        expect(player1.ai?).to be_falsey
+      end
+
+      it 'should set the player 1 as the computer marking with "0"' do
+        player2 = game.players.last
+        expect(player2).to be_a player_class
+        expect(player2.name).to eq player_names.last
+        expect(player2.mark).to eq '0'
+        expect(player2.ai?).to be_truthy
+      end
+    end
+
+    context 'when the game mode is multi-player' do
+      before do
+        game.mode = '2'
+        game.send(:set_players)
+      end
+
+      it 'should set the player 1 as a human player with the name provided by the liaison and marking with "X"' do
+        player1 = game.players.first
+        expect(player1).to be_a player_class
+        expect(player1.name).to eq player_names.first
+        expect(player1.mark).to eq 'X'
+        expect(player1.ai?).to be_falsey
+      end
+
+      it 'should set the player 2 as a human player with the name provided by the liaison and marking with "0"' do
+        player2 = game.players.last
+        expect(player2).to be_a player_class
+        expect(player2.name).to eq player_names.last
+        expect(player2.mark).to eq '0'
+        expect(player2.ai?).to be_falsey
+      end
+    end
   end
 
   describe '-#process_play' do
@@ -245,10 +259,6 @@ describe TicTacToe::Game do
         expect(game.send(:winner_or_tie_declared)).to be_falsey
       end
     end
-  end
-
-  describe '-#get_input' do
-    # ...
   end
 
   describe '-#get_play_or_cmd' do

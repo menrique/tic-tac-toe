@@ -41,8 +41,10 @@ en:
       %{player2} will mark with 0
 
   errors:
-    invalid_name: '%{name} is taken. Please choose another name.'
     invalid_input: 'Invalid input. Please try again.'
+    invalid_mode: 'Invalid game mode. Please try 1 (vs computer) or 2 (multi-player).'
+    invalid_play: 'Invalid play. Please use the ? command to inspect available plays.'
+    invalid_name: '%{name} is taken. Please choose another name.'
 
   restarting: 'Restarting...'
   exiting: 'Exiting...'

@@ -1,9 +1,10 @@
 module TicTacToe
   class Announcer
 
-    # Subscribe to given name on create
+    # Subscribe to given game on create
     def initialize(game)
       game.subscribe(self)
+      game.liaison.subscribe(self)
     end
 
     # Game events to announce
@@ -26,12 +27,8 @@ module TicTacToe
       IO.write_ln_br(I18n.t('results.tied'))
     end
 
-    def invalid_play
-      IO.write_ln_br(I18n.t('errors.invalid_input'))
-    end
-
-    def invalid_player_name(player_name)
-      IO.write_ln_br(I18n.t('errors.invalid_name', name: player_name))
+    def invalid_input(message = I18n.t('errors.invalid_input'))
+      IO.write_ln_br(message)
     end
 
     def successful_play(board)
@@ -52,7 +49,7 @@ module TicTacToe
     end
 
     def players_set(player1_name, player2_name)
-      IO.write_ln_br(I18n.t('players.description', player1: player1_name, player2: player2_name))
+      IO.write_ln_br("\n#{I18n.t('players.description', player1: player1_name, player2: player2_name)}")
     end
 
     def player_played(player_name, play)

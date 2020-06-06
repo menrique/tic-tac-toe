@@ -11,7 +11,11 @@ require './lib/announcer'
 module TicTacToe
   class Game
     include Wisper::Publisher
-    attr_accessor :board, :mode, :players, :current_player, :winner_player, :announcer
+    attr_accessor :board, :mode, :players, :current_player, :winner_player, :announcer, :liaison
+
+    def initialize(liaison)
+      self.liaison = liaison
+    end
 
     # Start a new game (entry point)
     def start
@@ -37,8 +41,7 @@ module TicTacToe
 
     # Configure the game mode
     def set_mode
-      IO.write_ln(I18n.t('mode.settings'))
-      self.mode = get_input(I18n.t('mode.select'), /^[12]\z/)[0]
+      self.mode = liaison.get_game_mode
     end
 
     # Check is the mode is against the computer
@@ -53,29 +56,11 @@ module TicTacToe
 
     # Configure each player
     def set_players
-      IO.write_ln(I18n.t('players.settings'))
-
-      p1 = I18n.t('players.p1')
-      p2 = I18n.t('players.p2')
-
-      player1_name = IO.read_ln(p1) || p1
-      player2_name = ''
-
-      loop do
-        player2_name = vs_computer? ? I18n.t('players.computer') : IO.read_ln_br(p2) || p2
-        if player1_name != player2_name
-          break
-        else
-          broadcast(:invalid_player_name, player2_name)
-        end
-      end
-
+      player1_name, player2_name = liaison.get_player_names
       self.players = [
           player1 = Player.new(player1_name, 'X'),
           player2 = Player.new(player2_name, '0', ai: vs_computer?)
       ]
-
-      IO.write_ln if vs_computer?
       broadcast(:players_set, player1.name, player2.name)
     end
 
@@ -100,7 +85,7 @@ module TicTacToe
         next_player unless winning_play?(row, col)
         broadcast(:successful_play, board)
       else
-        broadcast(:invalid_play)
+        broadcast(:invalid_input)
       end
     end
 
@@ -124,18 +109,6 @@ module TicTacToe
       result
     end
 
-    # Loop until get a valid input
-    def get_input(label, exp)
-      match = nil
-
-      while match.nil? do
-        match = exp.match(IO.read_ln_br(label))
-        IO.write_ln_br(I18n.t('errors.invalid_input')) if match.nil?
-      end
-
-      match
-    end
-
     # Get play or command input
     def get_play_or_cmd
       if current_player.ai?
@@ -143,7 +116,7 @@ module TicTacToe
         broadcast(:player_played, current_player.name, "#{row}#{col}")
         {row: row, col: col, cmd: nil}
       else
-        match = get_input(current_player.name, /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
+        match = liaison.get_input(current_player.name, exp: /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
         {row: match[:row], col: match[:col], cmd: match[:cmd]}
       end
     end
@@ -180,7 +153,7 @@ module TicTacToe
 
     # Ask if the user wants to play again
     def play_again?
-      continue = get_input(I18n.t('options.play_again'), /^[yn]\z/)[0] == 'y'
+      continue = liaison.get_input(I18n.t('options.play_again'), exp: /^[yn]\z/)[0] == 'y'
       process_cmd('r') if continue
       continue
     end

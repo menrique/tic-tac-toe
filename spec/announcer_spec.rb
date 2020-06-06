@@ -1,7 +1,8 @@
 require './lib/game'
 
 describe TicTacToe::Announcer do
-  let(:game) { TicTacToe::Game.new }
+  let(:liaison) { TicTacToe::Liaison.new }
+  let(:game) { TicTacToe::Game.new(liaison) }
   let!(:announcer) { described_class.new(game) }
   let(:io) { TicTacToe::IO }
   let(:board) { TicTacToe::Board.new }
@@ -42,19 +43,22 @@ describe TicTacToe::Announcer do
       end
     end
 
-    describe 'on :invalid_play' do
-      it 'should output the game end tied' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('errors.invalid_input'))
-        game.send(:broadcast, :invalid_play)
+    describe 'on :invalid_input' do
+      let(:message) { Faker::Lorem.sentence }
+      let(:default) { I18n.t('errors.invalid_input') }
+
+      context 'when a message is provided' do
+        it 'should output the given message' do
+          expect(io).to receive(:write_ln_br).with(message)
+          game.send(:broadcast, :invalid_input, message)
+        end
       end
-    end
 
-    describe 'on :invalid_player_name' do
-      let(:player_name) { Faker::Name.name }
-
-      it 'should output the game end tied' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('errors.invalid_name', name: player_name))
-        game.send(:broadcast, :invalid_player_name, player_name)
+      context 'when no message is provided' do
+        it 'should output the default message' do
+          expect(io).to receive(:write_ln_br)
+          game.send(:broadcast, :invalid_input, default)
+        end
       end
     end
 
@@ -92,7 +96,7 @@ describe TicTacToe::Announcer do
       let(:player2_name) { Faker::Name.name }
 
       it 'should output the player names' do
-        expect(io).to receive(:write_ln_br).with(I18n.t('players.description', player1: player1_name, player2: player2_name))
+        expect(io).to receive(:write_ln_br).with("\n#{I18n.t('players.description', player1: player1_name, player2: player2_name)}")
         game.send(:broadcast, :players_set, player1_name, player2_name)
       end
     end
