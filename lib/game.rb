@@ -1,17 +1,8 @@
-require 'i18n'
-require 'pry'
-require 'wisper'
-
-require './lib/io'
-require './lib/board'
-require './lib/player'
-require './lib/announcer'
-
 # Game logic
 module TicTacToe
   class Game
     include Wisper::Publisher
-    attr_accessor :board, :mode, :players, :current_player, :winner_player, :announcer, :liaison
+    attr_accessor :board, :mode, :players, :current_player, :winner_player, :liaison
 
     def initialize(liaison)
       self.liaison = liaison
@@ -30,6 +21,26 @@ module TicTacToe
       broadcast(:game_finished)
     end
 
+    # Check is the mode is against the computer
+    def vs_computer?
+      mode == '1'
+    end
+
+    # Check is the mode is multi-player
+    def multi_player?
+      mode == '2'
+    end
+
+    # Check if there is any declared winner
+    def winner?
+      !self.winner_player.nil?
+    end
+
+    # Check if there is no more available play
+    def tie?
+      !board.any_available_play?
+    end
+
     private
 
     # Reset game
@@ -41,22 +52,14 @@ module TicTacToe
 
     # Configure the game mode
     def set_mode
+      broadcast(:configuring_mode)
       self.mode = liaison.get_game_mode
-    end
-
-    # Check is the mode is against the computer
-    def vs_computer?
-      mode == '1'
-    end
-
-    # Check is the mode is multi-player
-    def multi_player?
-      mode == '2'
     end
 
     # Configure each player
     def set_players
-      player1_name, player2_name = liaison.get_player_names
+      broadcast(:configuring_players)
+      player1_name, player2_name = liaison.get_player_names(vs_computer?)
       self.players = [
           player1 = Player.new(player1_name, 'X'),
           player2 = Player.new(player2_name, '0', ai: vs_computer?)
@@ -70,7 +73,7 @@ module TicTacToe
         reset
         restart_cmd = false
         until winner_or_tie_declared do
-          row, col, cmd = get_play_or_cmd.values
+          row, col, cmd = liaison.get_play_or_cmd(current_player, board).values
           cmd.nil? ? process_play(row, col) : process_cmd(cmd)
           break if (restart_cmd = restart?(cmd))
         end
@@ -89,16 +92,6 @@ module TicTacToe
       end
     end
 
-    # Check if there is any declared winner
-    def winner?
-      !self.winner_player.nil?
-    end
-
-    # Check if there is no more available play
-    def tie?
-      !board.any_available_play?
-    end
-
     # Check and declare winner player or tied game
     def winner_or_tie_declared
       if (result = winner?)
@@ -107,18 +100,6 @@ module TicTacToe
         broadcast(:game_tied)
       end
       result
-    end
-
-    # Get play or command input
-    def get_play_or_cmd
-      if current_player.ai?
-        row, col = current_player.next_play(board)
-        broadcast(:player_played, current_player.name, "#{row}#{col}")
-        {row: row, col: col, cmd: nil}
-      else
-        match = liaison.get_input(current_player.name, exp: /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/)
-        {row: match[:row], col: match[:col], cmd: match[:cmd]}
-      end
     end
 
     # Process given command
@@ -153,7 +134,7 @@ module TicTacToe
 
     # Ask if the user wants to play again
     def play_again?
-      continue = liaison.get_input(I18n.t('options.play_again'), exp: /^[yn]\z/)[0] == 'y'
+      continue = liaison.get_confirmation
       process_cmd('r') if continue
       continue
     end

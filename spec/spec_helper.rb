@@ -12,6 +12,7 @@
 # the additional setup, and require it from the spec files that actually need
 # it.
 
+require 'faker'
 require 'wisper/rspec/matchers'
 require './config/initialize'
 

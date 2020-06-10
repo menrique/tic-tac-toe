@@ -1,5 +1,3 @@
-require './lib/game'
-
 describe TicTacToe::Announcer do
   let(:liaison) { TicTacToe::Liaison.new }
   let(:game) { TicTacToe::Game.new(liaison) }
@@ -108,6 +106,20 @@ describe TicTacToe::Announcer do
       it 'should output the player name and selected play' do
         expect(io).to receive(:write_ln_br).with("#{player_name}: #{play}")
         game.send(:broadcast, :player_played, player_name, play)
+      end
+    end
+
+    describe 'on :configuring_mode' do
+      it 'should output the mode settings header' do
+        expect(io).to receive(:write_ln).with(I18n.t('mode.settings'))
+        game.send(:broadcast, :configuring_mode)
+      end
+    end
+
+    describe 'on :configuring_players' do
+      it 'should output the players settings header' do
+        expect(io).to receive(:write_ln).with(I18n.t('players.settings'))
+        game.send(:broadcast, :configuring_players)
       end
     end
   end

@@ -1,14 +1,12 @@
 #!/usr/bin/env ruby
 
 require './config/initialize'
-require './lib/game'
 
 # Main routine
 module TicTacToe
 
-  # Create the players liaison, game and its announcer
-  liaison = Liaison.new
-  game = Game.new(liaison)
+  # Create the game with the players liaison and announcer
+  game = Game.new(Liaison.new)
   Announcer.new(game)
 
   # Intersect exit signal and avoid interruption error

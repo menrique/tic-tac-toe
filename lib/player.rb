@@ -1,5 +1,3 @@
-require 'pry'
-
 module TicTacToe
   class Player
     attr_accessor :name, :mark, :ai

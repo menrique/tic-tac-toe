@@ -1,6 +1,3 @@
-require 'faker'
-require './lib/io'
-
 describe TicTacToe::IO do
   let(:msg) { Faker::Lorem.sentence }
   let(:label) { Faker::Lorem.word }

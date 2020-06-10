@@ -55,5 +55,13 @@ module TicTacToe
     def player_played(player_name, play)
       IO.write_ln_br("#{player_name}: #{play}")
     end
+
+    def configuring_mode
+      IO.write_ln(I18n.t('mode.settings'))
+    end
+
+    def configuring_players
+      IO.write_ln(I18n.t('players.settings'))
+    end
   end
 end
