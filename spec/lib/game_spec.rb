@@ -1,7 +1,6 @@
-require './lib/game'
-
 describe TicTacToe::Game do
   let(:liaison) { TicTacToe::Liaison.new }
+  let(:announcer) { TicTacToe::Announcer.new(game) }
   let(:game) { TicTacToe::Game.new(liaison) }
   let(:board_class) { TicTacToe::Board }
   let(:player_class) { TicTacToe::Player }
@@ -25,6 +24,96 @@ describe TicTacToe::Game do
       expect{
         game.finish
       }.to broadcast(:game_finished)
+    end
+  end
+
+  describe '#vs_computer?' do
+    context 'when the mode is 1' do
+      before do
+        game.mode = '1'
+      end
+
+      it 'should return true' do
+        expect(game.vs_computer?).to be_truthy
+      end
+    end
+
+    context 'when the mode is 2' do
+      before do
+        game.mode = '2'
+      end
+
+      it 'should return false' do
+        expect(game.vs_computer?).to be_falsey
+      end
+    end
+  end
+
+  describe '#multi_player?' do
+    context 'when the mode is 2' do
+      before do
+        game.mode = '2'
+      end
+
+      it 'should return true' do
+        expect(game.multi_player?).to be_truthy
+      end
+    end
+
+    context 'when the mode is 1' do
+      before do
+        game.mode = '1'
+      end
+
+      it 'should return false' do
+        expect(game.multi_player?).to be_falsey
+      end
+    end
+  end
+
+  describe '#winner?' do
+    context 'when there is a winner player' do
+      before do
+        game.winner_player = player_class.new('Player1', 'X')
+        game.current_player = game.winner_player
+      end
+
+      it 'should return true' do
+        expect(game.winner?).to be_truthy
+      end
+    end
+
+    context 'when there is no winner player' do
+      it 'should return false' do
+        expect(game.winner?).to be_falsey
+      end
+    end
+  end
+
+  describe '#tie?' do
+    before do
+      game.players = players
+      game.send(:reset)
+    end
+
+    context 'when there are no more available plays' do
+      before do
+        allow(game.board).to receive(:any_available_play?).and_return(false)
+      end
+
+      it 'should return true' do
+        expect(game.tie?).to be_truthy
+      end
+    end
+
+    context 'when there are available plays' do
+      before do
+        allow(game.board).to receive(:any_available_play?).and_return(true)
+      end
+
+      it 'should return false' do
+        expect(game.tie?).to be_falsey
+      end
     end
   end
 
@@ -60,53 +149,15 @@ describe TicTacToe::Game do
       allow(liaison).to receive(:get_game_mode).and_return(mode)
     end
 
+    it 'should broadcast the mode configuration is in progress' do
+      expect{
+        game.send(:set_mode)
+      }.to broadcast(:configuring_mode)
+    end
+
     it 'should set the game mode with the one retrieved by the liaison' do
       game.send(:set_mode)
       expect(game.mode).to eq mode
-    end
-  end
-
-  describe '-#vs_computer?' do
-    context 'when the mode is 1' do
-      before do
-        game.mode = '1'
-      end
-
-      it 'should return true' do
-        expect(game.send(:vs_computer?)).to be_truthy
-      end
-    end
-
-    context 'when the mode is 2' do
-      before do
-        game.mode = '2'
-      end
-
-      it 'should return false' do
-        expect(game.send(:vs_computer?)).to be_falsey
-      end
-    end
-  end
-
-  describe '-#multi_player?' do
-    context 'when the mode is 2' do
-      before do
-        game.mode = '2'
-      end
-
-      it 'should return true' do
-        expect(game.send(:multi_player?)).to be_truthy
-      end
-    end
-
-    context 'when the mode is 1' do
-      before do
-        game.mode = '1'
-      end
-
-      it 'should return false' do
-        expect(game.send(:multi_player?)).to be_falsey
-      end
     end
   end
 
@@ -115,6 +166,13 @@ describe TicTacToe::Game do
 
     before do
       allow(liaison).to receive(:get_player_names).and_return(player_names)
+    end
+
+    it 'should broadcast the players configuration is in progress' do
+      expect{
+        game.mode = '1'
+        game.send(:set_players)
+      }.to broadcast(:configuring_players)
     end
 
     context 'when the game mode is vs the computer' do
@@ -164,52 +222,51 @@ describe TicTacToe::Game do
     end
   end
 
-  describe '-#process_play' do
+  describe '-#play' do
     # ...
   end
 
-  describe '-#winner?' do
-    context 'when there is a winner player' do
-      before do
-        game.winner_player = player_class.new('Player1', 'X')
-        game.current_player = game.winner_player
-      end
-
-      it 'should return true' do
-        expect(game.send(:winner?)).to be_truthy
-      end
-    end
-
-    context 'when there is no winner player' do
-      it 'should return false' do
-        expect(game.send(:winner?)).to be_falsey
-      end
-    end
-  end
-
-  describe '-#tie?' do
+  describe '-#process_play' do
     before do
       game.players = players
       game.send(:reset)
+      game.current_player = players.first
     end
 
-    context 'when there are no more available plays' do
-      before do
-        allow(game.board).to receive(:any_available_play?).and_return(false)
+    context 'when the play is valid' do
+      let(:row) { '1' }
+      let(:col) { 'a' }
+
+      it 'should set the play in the board' do
+        expect(game.board).to receive(:set).with(row, col, game.current_player.mark)
+        game.send(:process_play, row, col)
       end
 
-      it 'should return true' do
-        expect(game.send(:tie?)).to be_truthy
+      it 'should activate the next player' do
+        game.send(:process_play, row, col)
+        expect(game.current_player).to eq players.last
+      end
+
+      it 'should broadcast a successful play' do
+        expect{
+          game.send(:process_play, row, col)
+        }.to broadcast(:successful_play, game.board)
       end
     end
 
-    context 'when there are available plays' do
-      before do
-        allow(game.board).to receive(:any_available_play?).and_return(true)
+    context 'when the play is invalid' do
+      let(:row) { '5' }
+      let(:col) { 'j' }
+
+      it 'should remain the same current player' do
+        game.send(:process_play, row, col)
+        expect(game.current_player).to eq players.first
       end
 
-      it 'should return false' do
-        expect(game.send(:tie?)).to be_falsey
+      it 'should broadcast an invalid input' do
+        expect{
+          game.send(:process_play, row, col)
+        }.to broadcast(:invalid_input)
       end
     end
   end
@@ -259,10 +316,6 @@ describe TicTacToe::Game do
         expect(game.send(:winner_or_tie_declared)).to be_falsey
       end
     end
-  end
-
-  describe '-#get_play_or_cmd' do
-    # ...
   end
 
   describe '-#process_cmd' do
@@ -391,10 +444,37 @@ describe TicTacToe::Game do
   end
 
   describe '-#play_again?' do
-    # ...
+    context 'when it receives confirmation from the liaison' do
+      before do
+        allow(liaison).to receive(:get_confirmation).and_return(true)
+      end
+
+      it 'should return true' do
+        expect(game.send(:play_again?)).to be_truthy
+      end
+
+      it 'should behave as if it would restart the game' do
+        expect(game).to receive(:process_cmd).with('r')
+        game.send(:play_again?)
+      end
+    end
+
+    context 'when it does not receive confirmation from the liaison' do
+      before do
+        allow(liaison).to receive(:get_confirmation).and_return(false)
+      end
+
+      it 'should return false' do
+        expect(game.send(:play_again?)).to be_falsey
+      end
+    end
   end
 
   describe '-#quit' do
+    before do
+      allow(game).to receive(:exit)
+    end
+
     it 'should broadcast the game is exiting' do
       expect {
         game.send(:quit)
@@ -402,9 +482,8 @@ describe TicTacToe::Game do
     end
 
     it 'should halt with system exit' do
-      expect {
-        game.send(:quit)
-      }.to raise_error SystemExit
+      expect(game).to receive(:exit).with(true)
+      game.send(:quit)
     end
   end
 end

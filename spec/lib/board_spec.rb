@@ -1,7 +1,3 @@
-require 'pry'
-require 'faker'
-require './lib/board'
-
 describe TicTacToe::Board do
   let(:board) { TicTacToe::Board.new }
   let(:rows) { board.rows }

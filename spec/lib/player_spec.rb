@@ -1,7 +1,3 @@
-require 'pry'
-require 'faker'
-require './lib/player'
-
 describe TicTacToe::Player do
   let(:name) { Faker::Name.first_name }
   let(:ai) { false }
