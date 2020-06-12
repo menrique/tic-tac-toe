@@ -104,4 +104,7 @@ RSpec.configure do |config|
 
   # Wisper testing
   config.include(Wisper::RSpec::BroadcastMatcher)
+
+  # Focus on specific tests
+  config.filter_run_when_matching focus: true
 end
