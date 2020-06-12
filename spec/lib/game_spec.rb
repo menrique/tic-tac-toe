@@ -223,7 +223,86 @@ describe TicTacToe::Game do
   end
 
   describe '-#play' do
-    # ...
+    let(:inputs) {[
+        {row: '1', col: 'a', cmd: nil},
+        {row: '1', col: 'c', cmd: nil},
+        {row: '1', col: 'b', cmd: nil},
+        {row: '3', col: 'a', cmd: nil},
+        {row: '3', col: 'c', cmd: nil},
+        {row: '2', col: 'b', cmd: nil},
+    ]}
+
+    before do
+      game.mode = '2'
+      game.players = players
+      game.send(:reset)
+      allow(liaison).to receive(:get_play_or_cmd).with(a_kind_of(player_class), a_kind_of(board_class)).and_return(*inputs)
+    end
+
+    context 'when a player type a command' do
+      let(:cmd) { 'h' }
+      let(:inputs) {[
+          {col: nil, row: nil, cmd: cmd},
+      ]}
+
+      before do
+        allow(game).to receive(:winner_or_tie_declared).and_return(false, true)
+        allow(game).to receive(:play_again?).and_return(false)
+      end
+
+      it 'should process that command' do
+        expect(game).to receive(:process_cmd).with(cmd)
+        game.send(:play)
+      end
+    end
+
+    context 'when the game ends tied or with a winner' do
+      before do
+        allow(game).to receive(:winner_or_tie_declared).and_return(true)
+        allow(game).to receive(:play_again?).and_return(false)
+      end
+
+      it 'should ask if the players would like to play again' do
+        expect(game).to receive(:play_again?)
+        game.send(:play)
+      end
+    end
+
+    context 'while playing' do
+      before do
+        allow(game).to receive(:play_again?).and_return(false)
+      end
+
+      context 'until there is a winner' do
+        it 'should process the given plays' do
+          expect(game).to receive(:process_play).
+              with(a_kind_of(String), a_kind_of(String)).
+              exactly(inputs.size).times.and_call_original
+          game.send(:play)
+        end
+      end
+
+      context 'until the game ends tied' do
+        let(:inputs) {[
+            {row: '1', col: 'a', cmd: nil},
+            {row: '1', col: 'c', cmd: nil},
+            {row: '3', col: 'c', cmd: nil},
+            {row: '2', col: 'b', cmd: nil},
+            {row: '3', col: 'a', cmd: nil},
+            {row: '2', col: 'a', cmd: nil},
+            {row: '2', col: 'c', cmd: nil},
+            {row: '3', col: 'b', cmd: nil},
+            {row: '1', col: 'b', cmd: nil},
+        ]}
+
+        it 'should process the given plays' do
+          expect(game).to receive(:process_play).
+              with(a_kind_of(String), a_kind_of(String)).
+              exactly(inputs.size).times.and_call_original
+          game.send(:play)
+        end
+      end
+    end
   end
 
   describe '-#process_play' do

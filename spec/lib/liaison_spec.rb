@@ -103,14 +103,106 @@ describe TicTacToe::Liaison do
   end
 
   describe '#get_player_names' do
-    # ...
+    let(:p1) { I18n.t('players.p1') }
+    let(:p2) { I18n.t('players.p2') }
+    let(:player1_name) {Faker::Name.name }
+
+    context 'when is against the computer' do
+      let(:vs_computer) { true }
+
+      before do
+        allow(liaison).to receive(:get_input).with(p1, br: false).and_return(player1_name)
+      end
+
+      it 'should return the input player name as first player' do
+        expect(liaison.get_player_names(vs_computer).first).to eq player1_name
+      end
+
+      it 'should return the computer as second player' do
+        expect(liaison.get_player_names(vs_computer).last).to eq I18n.t('players.computer')
+      end
+    end
+
+    context 'when it is a multi-player game' do
+      let(:vs_computer) { false }
+      let(:player2_name) {Faker::Name.name }
+
+      before do
+        allow(liaison).to receive(:get_input).with(p1, br: false).and_return(player1_name)
+        allow(liaison).to receive(:get_input).with(
+            p2, exp: /^(?!.*#{player1_name}).*$/, br: false, error: I18n.t('errors.invalid_name', name: player1_name)
+        ).and_return(player2_name)
+      end
+
+      it 'should return the input player name as first player' do
+        expect(liaison.get_player_names(vs_computer).first).to eq player1_name
+      end
+
+      it 'should return the computer as second player' do
+        expect(liaison.get_player_names(vs_computer).last).to eq player2_name
+      end
+    end
   end
 
-  describe '-#get_play_or_cmd' do
-    # ...
+  describe '#get_play_or_cmd' do
+    let(:board) { TicTacToe::Board.new }
+
+    context 'when the current player is the computer' do
+      let(:current_player) { TicTacToe::Player.new(Faker::Name.name, 'O', ai: true) }
+
+    end
+
+    context 'when the current player is a human' do
+      let(:current_player) { TicTacToe::Player.new(Faker::Name.name, 'X', ai: false) }
+      let(:exp) { /\A(?<row>[123])(?<col>[abc])\z|\A(?<cmd>[r?q])\z/ }
+
+      context 'when the input is a play' do
+        before do
+          allow(liaison).to receive(:get_input).with(
+              current_player.name, exp: exp
+          ).and_return(exp.match('1a'))
+        end
+
+        it 'should return the row, column and no command' do
+          expect(liaison.get_play_or_cmd(current_player, board)).to eq({row: '1', col: 'a', cmd: nil})
+        end
+      end
+
+      context 'when the input is a command' do
+        before do
+          allow(liaison).to receive(:get_input).with(
+              current_player.name, exp: exp
+          ).and_return(exp.match('r'))
+        end
+
+        it 'should return nil coordinates and the input command' do
+          expect(liaison.get_play_or_cmd(current_player, board)).to eq({row: nil, col: nil, cmd: 'r'})
+        end
+      end
+    end
   end
 
-  describe '-#get_confirmation' do
-    # ...
+  describe '#get_confirmation' do
+    let(:exp) { /^[yn]\z/ }
+    
+    context 'when the input "y"' do
+      before do
+        allow(liaison).to receive(:get_input).with(I18n.t('options.play_again'), exp: exp).and_return(exp.match('y'))
+      end
+      
+      it 'should return true' do
+        expect(liaison.get_confirmation).to be_truthy
+      end
+    end
+    
+    context 'when the input is "n"' do
+      before do
+        allow(liaison).to receive(:get_input).with(I18n.t('options.play_again'), exp: exp).and_return(exp.match('n'))
+      end
+      
+      it 'should return false' do
+        expect(liaison.get_confirmation).to be_falsey
+      end
+    end
   end
 end
